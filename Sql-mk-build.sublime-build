@@ -1,0 +1,4 @@
+{
+	"cmd": ["perl", "sqlbuild.pl", "$file" ],
+	"working_dir": "c:\\GitHub\\Sql-mk-builder\\"
+}
