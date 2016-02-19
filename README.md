@@ -6,8 +6,8 @@ This simple Perl sript executes SQL queries and produces a Markdown output. Can 
 
 # Usage
 
-Create a .SQL file, specify in a comment the connection string (in perl DBI format) and the username and password,
-and a list of SQL queries separated by semicolon (and newline), and a build system, press Ctrl+B to execute the query.
+Create a .sql file, specify in a comment the connection string (in perl DBI format) and the username and password,
+and a list of SQL queries separated by semicolon (and newline), create a build system and assiciate your file with it, press Ctrl+B to execute the query.
 
 ![Run SQL Query](https://raw.githubusercontent.com/fthiella/Sql-mk-builder/master/builder.gif)
 
