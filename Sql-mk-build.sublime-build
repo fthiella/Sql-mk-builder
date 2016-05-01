@@ -1,4 +1,5 @@
 {
-	"cmd": ["perl", "sqlbuild.pl", "$file" ],
+	"cmd": ["perl", "sqlbuild.pl", "-s", "$file" ],
 	"working_dir": "c:\\GitHub\\Sql-mk-builder\\"
+    "selector": "*.sql"
 }
