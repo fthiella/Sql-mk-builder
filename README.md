@@ -1,8 +1,8 @@
-# Sql Markdown builder for SublimeText
+# Sql Markdown builder 1.0
 
 I like text editors, I have fallen in love with Sublime Text, and everything I write is in Markdown syntax!
 
-This simple Perl sript executes SQL queries and produces a Markdown output. Can be easily integrated with Sublime Text editor.
+This simple Perl sript executes SQL queries and produces a Markdown output. It can be easily integrated with Sublime Text editor, but it can also be used at the command line.
 
 # Usage
 
@@ -45,9 +45,9 @@ Add a build system in Sublime Text:
 
 ````
 {
-	"cmd": ["perl", "sqlbuild.pl", "$file" ],
+	"cmd": ["perl", "sqlbuild.pl", "-", "$file" ],
 	"working_dir": "c:\\GitHub\\Sql-mk-builder\\",
-	"selector": "source.sql"
+	"selector": "*.sql"
 }
 ````
 
