@@ -38,9 +38,10 @@ use warnings;
 use DBI;
 use File::Slurp;
 use Getopt::Long;
+use utf8;
 
-our $VERSION = "1.00";
-our $RELEASEDATE = "May 1st, 2016";
+our $VERSION = "1.01";
+our $RELEASEDATE = "June 20st, 2016";
 
 # CLI Interface
 
@@ -101,6 +102,7 @@ sub do_sql {
 	my $qry = $dbh->prepare($sql_query)
 	|| die "````\n", $sql_query, "\n````\n\n", ">", $DBI::errstr, "\n";
 
+
 	$qry->execute()
 	|| die "````\n", $sql_query, "\n````\n\n", ">", $DBI::errstr;
 
@@ -134,6 +136,8 @@ sub do_sql {
 		foreach my $row (@rows) {
 			{
 				no warnings 'uninitialized';
+				# replace non printable characters with space
+				for (@{$row}) { s/[^[:print:]]/ /g; }
 				print sprintf $f, @{$row};
 			}
 			print "\n";
@@ -144,6 +148,9 @@ sub do_sql {
 
 	$qry->finish();
 }
+
+# add utf8 support (still need to verify if it's always working)
+use open ':std', ':encoding(UTF-8)';
 
 # Get command line options
 my $source;
