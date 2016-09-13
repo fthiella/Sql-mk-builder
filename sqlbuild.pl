@@ -5,7 +5,7 @@
 
 =head1 NAME
 
-sqlbuild.pl - Perl SQL Markdown Builder (for the CLI or for Sublime Text)
+sqlbuild.pl - Perl SQL Markdown Builder
 
 =head1 SYNOPSIS
 
@@ -40,8 +40,8 @@ use File::Slurp;
 use Getopt::Long;
 use utf8;
 
-our $VERSION = "1.01";
-our $RELEASEDATE = "June 20st, 2016";
+our $VERSION = "1.05";
+our $RELEASEDATE = "September 13st, 2016";
 
 # CLI Interface
 
@@ -56,6 +56,7 @@ Options:
   -u, --username    specify username
   -p, --password    specify password
   -mw, --maxwidht   maximum width column (if unspecified get from actual data)
+  -f, --format      output format (table -default- or record)
 
 Project GitHub page: https://github.com/fthiella/Sql-mk-builder
 endhelp
@@ -149,6 +150,65 @@ sub do_sql {
 	$qry->finish();
 }
 
+sub do_sql_record {
+	my $dbh = shift;
+	my $sql_query = shift;
+	my $max_width = shift;
+
+	my $max_format = '';
+	my $nr = 0;
+
+	if (($max_width) && ($max_width> 0))
+	{
+		$max_format = ".$max_width";
+	}
+
+	my $qry = $dbh->prepare($sql_query)
+	|| die "````\n", $sql_query, "\n````\n\n", ">", $DBI::errstr, "\n";
+
+	$qry->execute()
+	|| die "````\n", $sql_query, "\n````\n\n", ">", $DBI::errstr;
+
+	my @field = (@{$qry->{NAME}});
+
+	# rows
+	while (my @row = $qry->fetchrow_array) {
+		print "# Record $nr\n\n";
+
+		my @width = (1,1);
+
+		foreach my $i (0 .. $#row) {
+			if (min(length($field[$i]),$max_width)>$width[0])               { $width[0]=min(length($field[$i]),$max_width); }
+			if (($row[$i]) && (min(length($row[$i]),$max_width))>$width[1]) { $width[1]=min(length($row[$i]),$max_width);   }
+		}
+
+		my $f = join ' | ', (map { "%-".$_."s"} @width);
+
+		print sprintf $f, qw(Column Value);
+		print "\n";
+		print '-'x$width[0] . '-|-' . '-'x$width[1] . "\n";
+
+
+		# replace non printable characters with space (should do the same to field names... but it's weird to use non printable characters in field names)
+
+		foreach my $i (0 .. $#row) {
+			{
+				no warnings 'uninitialized';
+				for (@row) { s/[^[:print:]]/ /g; }
+
+				print sprintf $f, (substr($field[$i], 0, $max_width), substr($row[$i], 0, $max_width));
+				print "\n";
+			}
+		}
+
+		print "\n";
+
+		$nr++;
+	}
+
+	$qry->finish();
+}
+
 # add utf8 support (still need to verify if it's always working)
 use open ':std', ':encoding(UTF-8)';
 
@@ -159,6 +219,7 @@ my $conn;
 my $username;
 my $password;
 my $maxwidth;
+my $format;
 my $help;
 
 GetOptions(
@@ -168,6 +229,7 @@ GetOptions(
 	'username|u=s' => \$username,
 	'password|p=s' => \$password,
 	'maxwidth|w=i' => \$maxwidth,
+	'format|f=s'   => \$format,
 	'help|h'       => \$help,
 );
 
@@ -189,17 +251,29 @@ die "Please specfy sql source with -s or -sql\n" unless ($source);
 my $sql = read_file($source);
 
 # get the connection parameters from source sql file (command line will take precedence)
+# the regexp is over-simplified but should work on most cases
 
-unless ($conn)     { ($conn) = $sql =~ /conn=\"([^\s]*)\"\s/; }
-unless ($username) { ($username) = $sql =~ /username=\"([^\s]*)\"\s/; }
-unless ($password) { ($password) = $sql =~ /password=\"([^\s]*)\"\s/; }
-unless ($maxwidth) { ($maxwidth) = $sql =~ /maxwidth=\"([^\s]*)\"\s/; }
+unless ($conn)     { ($conn) = $sql =~ /conn=\"([^\""]*)\"\s/; }
+unless ($username) { ($username) = $sql =~ /username=\"([^\""]*)\"\s/; }
+unless ($password) { ($password) = $sql =~ /password=\"([^\""]*)\"\s/; }
+unless ($maxwidth) { ($maxwidth) = $sql =~ /maxwidth=\"([^\""]*)\"\s/; }
+unless ($format)   { ($format) = $sql =~ /format=\"([^\""]*)\"\s/; }
+
+# default
+unless ($format)   { $format = 'table'; }
 
 my $dbh = DBI->connect($conn, $username, $password)
 || die $DBI::errstr;
 
 foreach my $sql_query (split /;\n/, $sql) {
-  	do_sql($dbh, $sql_query, $maxwidth);
+	# remove comments from sql_query (some drivers will remove automatically but other will throw an error)
+	# (simple regex, it will work only on simplest cases, please see http://learn.perl.org/faq/perlfaq6.html#How-do-I-use-a-regular-expression-to-strip-C-style-comments-from-a-file)
+	$sql_query =~ s/\/\*.*?\*\///gs;
+  	if ($format eq 'record') {
+  		do_sql_record($dbh, $sql_query, $maxwidth);	
+  	} else { 
+  		do_sql($dbh, $sql_query, $maxwidth);
+  	}
 }
 
 print "\n";
