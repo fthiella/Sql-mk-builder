@@ -1,6 +1,6 @@
-# Sql Markdown builder 1.0
+# Sql Markdown builder 1.05
 
-I like text editors, I have fallen in love with Sublime Text, and everything I write is in Markdown syntax!
+I like text editors, I have fallen in love with Sublime Text, and everything I write is in [Markdown](https://daringfireball.net/projects/markdown/) syntax!
 
 This simple Perl sript executes SQL queries and produces a Markdown output. It can be easily integrated with Sublime Text editor, but it can also be used at the command line.
 
@@ -13,7 +13,7 @@ and a list of SQL queries separated by semicolon (and newline), create a build s
 
 # Sample Query
 
-````
+````sql
 /*
   conn="dbi:SQLite:dbname=test.sqlite3"
   username=""
